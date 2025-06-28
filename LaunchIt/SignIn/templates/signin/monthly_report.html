@@ -1,0 +1,232 @@
+{% extends 'signin/base.html' %}
+
+{% block title %}Monthly Sign-In Report{% endblock %}
+
+{% block extra_css %}
+<style>
+    .stats-card {
+        margin-bottom: 25px;
+        border-radius: 10px;
+    }
+    .card-header {
+        font-weight: 500;
+    }
+    .stat-number {
+        font-size: 2.5rem;
+        font-weight: 700;
+    }
+    .stat-label {
+        font-size: 1rem;
+        color: #6c757d;
+    }
+    .table-hover tbody tr:hover {
+        background-color: rgba(0,123,255,0.1);
+    }
+    .breakdown-section {
+        margin-top: 40px;
+    }
+    .time-period {
+        background-color: #f8f9fa;
+        padding: 15px;
+        border-radius: 8px;
+        margin-bottom: 30px;
+    }
+    .time-period h3 {
+        margin-bottom: 20px;
+        color: #343a40;
+        border-bottom: 2px solid #dee2e6;
+        padding-bottom: 10px;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a href="{% url 'home' %}">Home</a></li>
+                <li class="breadcrumb-item active">Monthly Report</li>
+            </ol>
+        </nav>
+        <h2 class="mb-4">Building Sign-In Statistics</h2>
+    </div>
+</div>
+
+<!-- Monthly Statistics -->
+<div class="time-period">
+    <h3>{{ month_name }} Statistics</h3>
+    <div class="row">
+        <div class="col-md-4 mb-4">
+            <div class="card stats-card">
+                <div class="card-header bg-primary text-white">Individual Sign-Ins</div>
+                <div class="card-body text-center">
+                    <div class="stat-number">{{ individual_signins_month }}</div>
+                    <div class="stat-label">people</div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-4 mb-4">
+            <div class="card stats-card">
+                <div class="card-header bg-success text-white">Event Attendees</div>
+                <div class="card-body text-center">
+                    <div class="stat-number">{{ event_attendees_month }}</div>
+                    <div class="stat-label">people</div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-4 mb-4">
+            <div class="card stats-card">
+                <div class="card-header bg-info text-white">Total Visitors</div>
+                <div class="card-body text-center">
+                    <div class="stat-number">{{ total_people_month }}</div>
+                    <div class="stat-label">people</div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Year-to-Date Statistics -->
+<div class="time-period">
+    <h3>Year-to-Date Statistics ({{ year }})</h3>
+    <div class="row">
+        <div class="col-md-4 mb-4">
+            <div class="card stats-card">
+                <div class="card-header bg-primary text-white">Individual Sign-Ins YTD</div>
+                <div class="card-body text-center">
+                    <div class="stat-number">{{ individual_signins_ytd }}</div>
+                    <div class="stat-label">people</div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-4 mb-4">
+            <div class="card stats-card">
+                <div class="card-header bg-success text-white">Event Attendees YTD</div>
+                <div class="card-body text-center">
+                    <div class="stat-number">{{ event_attendees_ytd }}</div>
+                    <div class="stat-label">people</div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-4 mb-4">
+            <div class="card stats-card">
+                <div class="card-header bg-info text-white">Total Visitors YTD</div>
+                <div class="card-body text-center">
+                    <div class="stat-number">{{ total_people_ytd }}</div>
+                    <div class="stat-label">people</div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Full Year Projection -->
+<div class="time-period">
+    <h3>Full Year Statistics ({{ year }})</h3>
+    <div class="row">
+        <div class="col-md-4 mb-4">
+            <div class="card stats-card">
+                <div class="card-header bg-primary text-white">Individual Sign-Ins</div>
+                <div class="card-body text-center">
+                    <div class="stat-number">{{ individual_signins_year }}</div>
+                    <div class="stat-label">people</div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-4 mb-4">
+            <div class="card stats-card">
+                <div class="card-header bg-success text-white">Event Attendees</div>
+                <div class="card-body text-center">
+                    <div class="stat-number">{{ event_attendees_year }}</div>
+                    <div class="stat-label">people</div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-4 mb-4">
+            <div class="card stats-card">
+                <div class="card-header bg-info text-white">Total Visitors</div>
+                <div class="card-body text-center">
+                    <div class="stat-number">{{ total_people_year }}</div>
+                    <div class="stat-label">people</div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Breakdown by Reason -->
+<div class="breakdown-section">
+    <div class="row">
+        <div class="col-md-6 mb-4">
+            <div class="card">
+                <div class="card-header bg-primary text-white">
+                    Individual Sign-ins by Reason ({{ month_name }})
+                </div>
+                <div class="card-body">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>Reason</th>
+                                <th class="text-center">Count</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for item in individual_by_reason %}
+                            <tr>
+                                <td>{{ item.reason__name }}</td>
+                                <td class="text-center">{{ item.count }}</td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="2" class="text-center">No data available</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-6 mb-4">
+            <div class="card">
+                <div class="card-header bg-success text-white">
+                    Event Attendees by Reason ({{ month_name }})
+                </div>
+                <div class="card-body">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>Reason</th>
+                                <th class="text-center">Count</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for item in event_by_reason %}
+                            <tr>
+                                <td>{{ item.reason__name }}</td>
+                                <td class="text-center">{{ item.count }}</td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="2" class="text-center">No data available</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="d-grid gap-2 mt-4">
+    <a href="{% url 'home' %}" class="btn btn-secondary btn-lg">Back to Home</a>
+</div>
+{% endblock %}
