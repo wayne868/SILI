@@ -30,14 +30,26 @@
             </div>
         </div>
         
-        <!-- Report Button -->
+        <!-- Report & Management Buttons -->
         <div class="row mt-5">
-            <div class="col-12">
-                <div class="card">
-                    <div class="card-body">
+            <div class="col-md-6 mb-4">
+                <div class="card h-100">
+                    <div class="card-body d-flex flex-column">
                         <h3 class="card-title">View Statistics</h3>
-                        <p class="card-text">Access monthly and yearly sign-in reports and statistics.</p>
-                        <a href="{% url 'monthly_report' %}" class="btn btn-info btn-lg">View Reports</a>
+                        <p class="card-text flex-grow-1">Access monthly and yearly sign-in reports and statistics.</p>
+                        <p><small class="text-muted">Administrator access required</small></p>
+                        <a href="{% url 'admin_login' %}?next={% url 'monthly_report' %}" class="btn btn-info btn-lg">View Reports</a>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-md-6 mb-4">
+                <div class="card h-100">
+                    <div class="card-body d-flex flex-column">
+                        <h3 class="card-title">Manage Sign-Ins</h3>
+                        <p class="card-text flex-grow-1">View and delete sign-in entries in the system.</p>
+                        <p><small class="text-muted">Administrator access required</small></p>
+                        <a href="{% url 'admin_login' %}?next={% url 'manage_signins' %}" class="btn btn-danger btn-lg">Manage Sign-Ins</a>
                     </div>
                 </div>
             </div>

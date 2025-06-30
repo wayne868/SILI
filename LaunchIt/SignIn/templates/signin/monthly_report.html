@@ -40,6 +40,12 @@
 </style>
 {% endblock %}
 
+{% block extra_js %}
+<!-- Chart.js Library and plugins -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.0.0"></script>
+{% endblock %}
+
 {% block content %}
 <div class="row">
     <div class="col-12">
@@ -50,12 +56,84 @@
             </ol>
         </nav>
         <h2 class="mb-4">Building Sign-In Statistics</h2>
+        
+        <!-- Report Filter Form -->
+        <div class="card mb-4">
+            <div class="card-header bg-light">
+                <h5 class="mb-0">Filter Report</h5>
+            </div>
+            <div class="card-body">
+                <ul class="nav nav-tabs mb-3" id="filterTabs" role="tablist">
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link {% if filter_type != 'range' %}active{% endif %}" id="monthly-tab" data-bs-toggle="tab" data-bs-target="#monthly" type="button" role="tab">Month/Year</button>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link {% if filter_type == 'range' %}active{% endif %}" id="range-tab" data-bs-toggle="tab" data-bs-target="#range" type="button" role="tab">Date Range</button>
+                    </li>
+                </ul>
+                
+                <div class="tab-content" id="filterTabsContent">
+                    <!-- Monthly Filter Tab -->
+                    <div class="tab-pane fade {% if filter_type != 'range' %}show active{% endif %}" id="monthly" role="tabpanel">
+                        <form method="GET" action="{% url 'monthly_report' %}" class="row g-3">
+                            <input type="hidden" name="filter_type" value="monthly">
+                            <div class="col-md-4">
+                                <label for="month" class="form-label">Month</label>
+                                <select class="form-select" id="month" name="month">
+                                    <option value="1" {% if selected_month == 1 %}selected{% endif %}>January</option>
+                                    <option value="2" {% if selected_month == 2 %}selected{% endif %}>February</option>
+                                    <option value="3" {% if selected_month == 3 %}selected{% endif %}>March</option>
+                                    <option value="4" {% if selected_month == 4 %}selected{% endif %}>April</option>
+                                    <option value="5" {% if selected_month == 5 %}selected{% endif %}>May</option>
+                                    <option value="6" {% if selected_month == 6 %}selected{% endif %}>June</option>
+                                    <option value="7" {% if selected_month == 7 %}selected{% endif %}>July</option>
+                                    <option value="8" {% if selected_month == 8 %}selected{% endif %}>August</option>
+                                    <option value="9" {% if selected_month == 9 %}selected{% endif %}>September</option>
+                                    <option value="10" {% if selected_month == 10 %}selected{% endif %}>October</option>
+                                    <option value="11" {% if selected_month == 11 %}selected{% endif %}>November</option>
+                                    <option value="12" {% if selected_month == 12 %}selected{% endif %}>December</option>
+                                </select>
+                            </div>
+                            <div class="col-md-4">
+                                <label for="year" class="form-label">Year</label>
+                                <select class="form-select" id="year" name="year">
+                                    {% for year_option in years_range %}
+                                        <option value="{{ year_option }}" {% if selected_year == year_option %}selected{% endif %}>{{ year_option }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            <div class="col-md-4 d-flex align-items-end">
+                                <button type="submit" class="btn btn-primary w-100">Apply Filter</button>
+                            </div>
+                        </form>
+                    </div>
+                    
+                    <!-- Date Range Filter Tab -->
+                    <div class="tab-pane fade {% if filter_type == 'range' %}show active{% endif %}" id="range" role="tabpanel">
+                        <form method="GET" action="{% url 'monthly_report' %}" class="row g-3">
+                            <input type="hidden" name="filter_type" value="range">
+                            <div class="col-md-5">
+                                <label for="start_date" class="form-label">Start Date</label>
+                                <input type="date" class="form-control" id="start_date" name="start_date" value="{{ start_date }}" required>
+                            </div>
+                            <div class="col-md-5">
+                                <label for="end_date" class="form-label">End Date</label>
+                                <input type="date" class="form-control" id="end_date" name="end_date" value="{{ end_date }}" required>
+                            </div>
+                            <div class="col-md-2 d-flex align-items-end">
+                                <button type="submit" class="btn btn-primary w-100">Apply</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
 </div>
 
 <!-- Monthly Statistics -->
 <div class="time-period">
-    <h3>{{ month_name }} Statistics</h3>
+    <h3>{{ period_description }} Statistics</h3>
     <div class="row">
         <div class="col-md-4 mb-4">
             <div class="card stats-card">
@@ -83,6 +161,18 @@
                 <div class="card-body text-center">
                     <div class="stat-number">{{ total_people_month }}</div>
                     <div class="stat-label">people</div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Monthly Chart -->
+    <div class="row mt-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header bg-dark text-white">Monthly Visitor Distribution</div>
+                <div class="card-body">
+                    <canvas id="monthlyChart" height="200"></canvas>
                 </div>
             </div>
         </div>
@@ -164,6 +254,28 @@
 <!-- Breakdown by Reason -->
 <div class="breakdown-section">
     <div class="row">
+        <!-- Charts for Reason Distribution -->
+        <div class="row mb-4">
+            <div class="col-md-6 mb-4">
+                <div class="card">
+                    <div class="card-header bg-primary text-white">Individual Sign-ins by Reason</div>
+                    <div class="card-body">
+                        <canvas id="individualReasonsChart" height="250"></canvas>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-md-6 mb-4">
+                <div class="card">
+                    <div class="card-header bg-success text-white">Event Attendees by Reason</div>
+                    <div class="card-body">
+                        <canvas id="eventReasonsChart" height="250"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Tables for Reason Breakdown -->
         <div class="col-md-6 mb-4">
             <div class="card">
                 <div class="card-header bg-primary text-white">
@@ -229,4 +341,184 @@
 <div class="d-grid gap-2 mt-4">
     <a href="{% url 'home' %}" class="btn btn-secondary btn-lg">Back to Home</a>
 </div>
+
+<!-- Initialize Charts -->
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Monthly Distribution Chart
+        const monthlyCtx = document.getElementById('monthlyChart').getContext('2d');
+        const monthlyChart = new Chart(monthlyCtx, {
+            type: 'bar',
+            data: {
+                labels: ['Individual Sign-ins', 'Event Attendees', 'Total'],
+                datasets: [{
+                    label: 'Number of People',
+                    data: [{{ individual_signins_month }}, {{ event_attendees_month }}, {{ total_people_month }}],
+                    backgroundColor: [
+                        'rgba(13, 110, 253, 0.7)', // Bootstrap primary
+                        'rgba(25, 135, 84, 0.7)',  // Bootstrap success
+                        'rgba(13, 202, 240, 0.7)'  // Bootstrap info
+                    ],
+                    borderColor: [
+                        'rgb(13, 110, 253)',
+                        'rgb(25, 135, 84)',
+                        'rgb(13, 202, 240)'
+                    ],
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                responsive: true,
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        title: {
+                            display: true,
+                            text: 'Number of People'
+                        }
+                    }
+                },
+                plugins: {
+                    title: {
+                        display: true,
+                        text: '{{ month_name }} Visitor Distribution',
+                        font: {
+                            size: 16
+                        }
+                    }
+                }
+            }
+        });
+
+        // Individual Reasons Pie Chart
+        const individualReasonsCtx = document.getElementById('individualReasonsChart').getContext('2d');
+        const individualReasonsChart = new Chart(individualReasonsCtx, {
+            type: 'pie',
+            data: {
+                labels: [{% for item in individual_by_reason %}'{{ item.reason__name }}'{% if not forloop.last %}, {% endif %}{% endfor %}],
+                datasets: [{
+                    label: 'Individual Sign-ins',
+                    data: [{% for item in individual_by_reason %}{{ item.count }}{% if not forloop.last %}, {% endif %}{% endfor %}],
+                    backgroundColor: [
+                        'rgba(13, 110, 253, 0.7)',
+                        'rgba(111, 66, 193, 0.7)',
+                        'rgba(214, 51, 132, 0.7)',
+                        'rgba(220, 53, 69, 0.7)',
+                        'rgba(255, 193, 7, 0.7)',
+                        'rgba(25, 135, 84, 0.7)',
+                        'rgba(13, 202, 240, 0.7)',
+                        'rgba(173, 181, 189, 0.7)',
+                        'rgba(33, 37, 41, 0.7)',
+                        'rgba(108, 117, 125, 0.7)'
+                    ],
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                responsive: true,
+                plugins: {
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                const label = context.label || '';
+                                const value = context.raw || 0;
+                                const total = context.chart.data.datasets[0].data.reduce((acc, val) => acc + val, 0);
+                                const percentage = Math.round((value / total) * 100);
+                                return `${label}: ${value} (${percentage}%)`;
+                            }
+                        }
+                    },
+                    title: {
+                        display: true,
+                        text: 'Individual Sign-ins by Reason',
+                        font: {
+                            size: 14
+                        }
+                    },
+                    legend: {
+                        position: 'right',
+                        align: 'center'
+                    },
+                    datalabels: {
+                        formatter: (value, ctx) => {
+                            const sum = ctx.chart.data.datasets[0].data.reduce((acc, val) => acc + val, 0);
+                            const percentage = Math.round((value / sum) * 100);
+                            return percentage > 5 ? `${percentage}%` : '';
+                        },
+                        color: '#fff',
+                        font: {
+                            weight: 'bold',
+                            size: 12
+                        }
+                    }
+                }
+            }
+        });
+
+        // Event Reasons Pie Chart
+        const eventReasonsCtx = document.getElementById('eventReasonsChart').getContext('2d');
+        const eventReasonsChart = new Chart(eventReasonsCtx, {
+            type: 'pie',
+            data: {
+                labels: [{% for item in event_by_reason %}'{{ item.reason__name }}'{% if not forloop.last %}, {% endif %}{% endfor %}],
+                datasets: [{
+                    label: 'Event Attendees',
+                    data: [{% for item in event_by_reason %}{{ item.count }}{% if not forloop.last %}, {% endif %}{% endfor %}],
+                    backgroundColor: [
+                        'rgba(25, 135, 84, 0.7)',
+                        'rgba(13, 202, 240, 0.7)',
+                        'rgba(13, 110, 253, 0.7)',
+                        'rgba(111, 66, 193, 0.7)',
+                        'rgba(214, 51, 132, 0.7)',
+                        'rgba(220, 53, 69, 0.7)',
+                        'rgba(255, 193, 7, 0.7)',
+                        'rgba(173, 181, 189, 0.7)',
+                        'rgba(33, 37, 41, 0.7)',
+                        'rgba(108, 117, 125, 0.7)'
+                    ],
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                responsive: true,
+                plugins: {
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                const label = context.label || '';
+                                const value = context.raw || 0;
+                                const total = context.chart.data.datasets[0].data.reduce((acc, val) => acc + val, 0);
+                                const percentage = Math.round((value / total) * 100);
+                                return `${label}: ${value} (${percentage}%)`;
+                            }
+                        }
+                    },
+                    title: {
+                        display: true,
+                        text: 'Event Attendees by Reason',
+                        font: {
+                            size: 14
+                        }
+                    },
+                    legend: {
+                        position: 'right',
+                        align: 'center'
+                    },
+                    datalabels: {
+                        formatter: (value, ctx) => {
+                            const sum = ctx.chart.data.datasets[0].data.reduce((acc, val) => acc + val, 0);
+                            const percentage = Math.round((value / sum) * 100);
+                            return percentage > 5 ? `${percentage}%` : '';
+                        },
+                        color: '#fff',
+                        font: {
+                            weight: 'bold',
+                            size: 12
+                        }
+                    }
+                }
+            }
+        });
+    });
+</script>
 {% endblock %}

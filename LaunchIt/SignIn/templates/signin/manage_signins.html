@@ -1,0 +1,140 @@
+{% extends 'signin/base.html' %}
+
+{% block title %}Manage Sign-Ins{% endblock %}
+
+{% block extra_css %}
+<style>
+    .table-container {
+        margin-bottom: 40px;
+    }
+    .delete-form {
+        display: inline;
+    }
+    .btn-danger {
+        padding: 0.25rem 0.5rem;
+        font-size: 0.875rem;
+    }
+    .nav-links {
+        margin-bottom: 30px;
+        text-align: center;
+    }
+    .nav-links a {
+        margin: 0 10px;
+    }
+    .table th, .table td {
+        vertical-align: middle;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-body">
+                <h2 class="card-title text-center mb-4">Sign-In Management</h2>
+                
+                <!-- Navigation links -->
+                <div class="nav-links">
+                    <a href="{% url 'home' %}" class="btn btn-primary">Home</a>
+                    <a href="{% url 'individual_signin' %}" class="btn btn-success">Individual Sign-In</a>
+                    <a href="{% url 'event_signin' %}" class="btn btn-success">Event Sign-In</a>
+                    <a href="{% url 'monthly_report' %}" class="btn btn-info">Reports</a>
+                </div>
+
+                <!-- Individual Sign-Ins -->
+                <div class="table-container">
+                    <h3>Individual Sign-Ins</h3>
+                    {% if individual_signins %}
+                    <div class="table-responsive">
+                        <table class="table table-striped table-hover">
+                            <thead class="table-primary">
+                                <tr>
+                                    <th>ID</th>
+                                    <th>Name</th>
+                                    <th>Date</th>
+                                    <th>Reason</th>
+                                    <th>Timestamp</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for signin in individual_signins %}
+                                <tr>
+                                    <td>{{ signin.id }}</td>
+                                    <td>{{ signin.name }}</td>
+                                    <td>{{ signin.date }}</td>
+                                    <td>{{ signin.reason.name }}</td>
+                                    <td>{{ signin.timestamp }}</td>
+                                    <td>
+                                        <form method="post" class="delete-form">
+                                            {% csrf_token %}
+                                            <input type="hidden" name="signin_type" value="individual">
+                                            <input type="hidden" name="signin_id" value="{{ signin.id }}">
+                                            <button type="submit" class="btn btn-danger" 
+                                                    onclick="return confirm('Are you sure you want to delete this sign-in?')">
+                                                Delete
+                                            </button>
+                                        </form>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% else %}
+                    <p class="text-center">No individual sign-ins found.</p>
+                    {% endif %}
+                </div>
+
+                <!-- Event Sign-Ins -->
+                <div class="table-container">
+                    <h3>Event Sign-Ins</h3>
+                    {% if event_signins %}
+                    <div class="table-responsive">
+                        <table class="table table-striped table-hover">
+                            <thead class="table-primary">
+                                <tr>
+                                    <th>ID</th>
+                                    <th>Organizer</th>
+                                    <th>Date</th>
+                                    <th>Reason</th>
+                                    <th>Attendees</th>
+                                    <th>Timestamp</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for signin in event_signins %}
+                                <tr>
+                                    <td>{{ signin.id }}</td>
+                                    <td>{{ signin.organizer_name }}</td>
+                                    <td>{{ signin.date }}</td>
+                                    <td>{{ signin.reason.name }}</td>
+                                    <td>{{ signin.attendee_count }}</td>
+                                    <td>{{ signin.timestamp }}</td>
+                                    <td>
+                                        <form method="post" class="delete-form">
+                                            {% csrf_token %}
+                                            <input type="hidden" name="signin_type" value="event">
+                                            <input type="hidden" name="signin_id" value="{{ signin.id }}">
+                                            <button type="submit" class="btn btn-danger"
+                                                    onclick="return confirm('Are you sure you want to delete this event sign-in?')">
+                                                Delete
+                                            </button>
+                                        </form>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% else %}
+                    <p class="text-center">No event sign-ins found.</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
